@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>UWON Vocabulary Test</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #3AC7A4, #2D9C8B);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 2rem;
+    }
+
+    .container {
+      background-color: white;
+      padding: 2rem;
+      border-radius: 1rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      max-width: 700px;
+      width: 100%;
+    }
+
+    h1, h2, h3 {
+      text-align: center;
+      color: #2D9C8B;
+    }
+
+    button, input {
+      font-size: 1.1rem;
+      padding: 0.5rem 1rem;
+      margin: 0.5rem 0;
+      border-radius: 0.5rem;
+      border: 1px solid #ccc;
+    }
+
+    input {
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    button {
+      background-color: #2D9C8B;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background-color: #257c6f;
+    }
+
+    .correct { color: green; }
+    .wrong { color: red; }
+    .hidden { display: none; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 0.5rem;
+      text-align: left;
+    }
+
+    .section {
+      margin-top: 2rem;
+    }
+
+    #timer {
+      text-align: center;
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      color: #444;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1> UWON Vocabulary Test - Lesson 31</h1>
+    <div id="timer">⏱ Time Elapsed: 0 sec</div>
+
+    <div id="testSection">
+      <p id="instructions">🎧 Round 1: Click "Play" to hear the word</p>
+      <button id="playBtn">🔊 Play Word</button><br />
+      <p id="chineseHint" class="hidden">Meaning: <span></span></p>
+      <input type="text" id="answer" placeholder="Enter your answer" />
+      <button id="checkBtn">✔️ Check</button>
+      <div id="result"></div>
+      <button id="nextBtn" class="hidden">➡️ Next</button>
+      <p id="progress"></p>
+    </div>
+
+    <div id="reportSection" class="hidden section">
+      <h2>📊 Test Report</h2>
+      <p id="scoreSummary"></p>
+      <p id="timeSummary"></p>
+      <div id="errorList"></div>
+      <button onclick="location.reload()">🔁 Restart</button>
+    </div>
+  </div>
+
+  <script>
+    const wordList = [
+      { word: "vibrate", meaning: "v. 颤动，震动" },
+      { word: "vice", meaning: "n. 恶习，罪恶；副职" },
+      { word: "victim", meaning: "n. 受害者，牺牲者" },
+      { word: "victory", meaning: "n. 胜利，成功" },
+      { word: "vigorous", meaning: "adj. 有活力的，精力充沛的" },
+      { word: "violent", meaning: "adj. 暴力的，激烈的" },
+      { word: "virtually", meaning: "adv. 几乎，实际上" },
+      { word: "visible", meaning: "adj. 可见的，明显的" },
+      { word: "vision", meaning: "n. 视力，幻想，愿景" },
+      { word: "visual", meaning: "adj. 视觉的，图像的" },
+      { word: "vital", meaning: "adj. 至关重要的，有生命力的" },
+      { word: "vivid", meaning: "adj. 生动的，鲜明的" },
+      { word: "volume", meaning: "n. 体积，音量，卷册" },
+      { word: "voluntary", meaning: "adj. 自愿的，志愿的" },
+      { word: "vote", meaning: "v./n. 投票，选票" },
+      { word: "voyage", meaning: "n. 航行，航程" },
+      { word: "wage", meaning: "n. 工资；v. 发动（战争）" },
+      { word: "wander", meaning: "v. 漫步，闲逛" },
+      { word: "wax", meaning: "n. 蜡；v. 打蜡，增长" },
+      { word: "weapon", meaning: "n. 武器，兵器" },
+      { word: "weed", meaning: "n. 杂草；v. 除草" },
+      { word: "weep", meaning: "v. 哭泣，流泪" },
+      { word: "weld", meaning: "v. 焊接，结合" },
+      { word: "welfare", meaning: "n. 福利，幸福" },
+      { word: "whip", meaning: "n. 鞭子；v. 抽打，搅打" },
+      { word: "whisper", meaning: "v./n. 耳语，低语" },
+      { word: "whittle", meaning: "v. 削，削弱" },
+      { word: "wicked", meaning: "adj. 邪恶的，恶毒的" },
+      { word: "widespread", meaning: "adj. 广泛的，普遍的" },
+      { word: "wisdom", meaning: "n. 智慧，才智" },
+      { word: "withdraw", meaning: "v. 撤退，取款，退出" },
+      { word: "withstand", meaning: "v. 抵挡，承受" },
+      { word: "witness", meaning: "n./v. 目击者，见证" },
+      { word: "wonder", meaning: "v./n. 惊奇，想知道，奇迹" },
+      { word: "worship", meaning: "v./n. 崇拜，敬拜" },
+      { word: "worthwhile", meaning: "adj. 值得的，有价值的" },
+      { word: "wrap", meaning: "v. 包裹，围绕" },
+      { word: "wreck", meaning: "n. 残骸；v. 破坏，失事" },
+      { word: "yawn", meaning: "v./n. 打哈欠" },
+      { word: "yield", meaning: "v. 屈服，产出，让步" }
+    ];
+
+    let currentIndex = 0;
+    let currentRound = 1;
+    let currentWord = {};
+    const errorsRound1 = [];
+    const errorsRound2 = [];
+
+    const playBtn = document.getElementById("playBtn");
+    const checkBtn = document.getElementById("checkBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const answerInput = document.getElementById("answer");
+    const resultDiv = document.getElementById("result");
+    const instructions = document.getElementById("instructions");
+    const chineseHint = document.getElementById("chineseHint");
+    const progress = document.getElementById("progress");
+    const reportSection = document.getElementById("reportSection");
+    const scoreSummary = document.getElementById("scoreSummary");
+    const errorList = document.getElementById("errorList");
+    const timeSummary = document.getElementById("timeSummary");
+    const timerDisplay = document.getElementById("timer");
+
+    let total = wordList.length * 2;
+    let correct = 0;
+    let selectedVoice = null;
+
+    let startTime = Date.now();
+    let round1Start = Date.now();
+    let round1Time = 0;
+    let round2Time = 0;
+    let timerInterval = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      timerDisplay.textContent = `⏱ Time Elapsed: ${Math.floor(elapsed / 1000)} sec`;
+    }, 1000);
+
+    function loadVoicesAndSetVoice() {
+      const voices = speechSynthesis.getVoices();
+      if (voices.length > 0) {
+        selectedVoice = voices.find(v =>
+          v.name.includes("Google US English") ||
+          (v.lang === "en-US" && v.default)
+        ) || voices[0];
+      }
+    }
+
+    if (speechSynthesis.getVoices().length === 0) {
+      speechSynthesis.onvoiceschanged = loadVoicesAndSetVoice;
+    } else {
+      loadVoicesAndSetVoice();
+    }
+
+    playBtn.addEventListener("click", () => {
+      if (!selectedVoice) loadVoicesAndSetVoice();
+      if (currentRound === 1) speakWord(currentWord.word);
+    });
+
+    function speakWord(word) {
+      const utterance = new SpeechSynthesisUtterance(word);
+      utterance.lang = "en-US";
+      if (selectedVoice) utterance.voice = selectedVoice;
+      speechSynthesis.cancel();
+      speechSynthesis.speak(utterance);
+    }
+
+    function loadWord() {
+      currentWord = wordList[currentIndex];
+      answerInput.value = "";
+      resultDiv.textContent = "";
+      nextBtn.classList.add("hidden");
+      answerInput.focus();
+
+      if (currentRound === 1) {
+        instructions.textContent = "🎧 Round 1: Click \"Play\" to hear the word";
+        chineseHint.classList.add("hidden");
+
+        // ✅ 自动播放当前单词
+        if (!selectedVoice) loadVoicesAndSetVoice();
+        setTimeout(() => {
+          speakWord(currentWord.word);
+        }, 200);
+      } else {
+        instructions.textContent = "💡 Round 2: Type the correct English word";
+        chineseHint.classList.remove("hidden");
+        chineseHint.querySelector("span").textContent = currentWord.meaning;
+      }
+
+      progress.textContent = `Progress: ${currentIndex + 1} / ${wordList.length} - Round ${currentRound}`;
+    }
+
+    checkBtn.addEventListener("click", handleCheck);
+    nextBtn.addEventListener("click", handleNext);
+
+    function handleCheck() {
+      const userAnswer = answerInput.value.trim().toLowerCase();
+      const correctAnswer = currentWord.word.toLowerCase();
+
+      if (userAnswer === correctAnswer) {
+        resultDiv.textContent = "✅ Correct!";
+        resultDiv.className = "correct";
+        correct++;
+      } else {
+        resultDiv.textContent = `❌ Incorrect. The correct answer is: ${currentWord.word}`;
+        resultDiv.className = "wrong";
+        const error = {
+          word: currentWord.word,
+          yourAnswer: userAnswer || "(blank)",
+          meaning: currentWord.meaning
+        };
+        (currentRound === 1 ? errorsRound1 : errorsRound2).push(error);
+      }
+
+      nextBtn.classList.remove("hidden");
+    }
+
+    function handleNext() {
+      currentIndex++;
+      if (currentIndex >= wordList.length) {
+        if (currentRound === 1) {
+          round1Time = Date.now() - round1Start;
+          currentRound = 2;
+          currentIndex = 0;
+          round1Start = Date.now();
+          loadWord();
+        } else {
+          round2Time = Date.now() - round1Start;
+          clearInterval(timerInterval);
+          showReport();
+        }
+      } else {
+        loadWord();
+      }
+    }
+
+    function showReport() {
+      document.getElementById("testSection").classList.add("hidden");
+      reportSection.classList.remove("hidden");
+      scoreSummary.textContent = `🎉 Test completed! Correct: ${correct} / ${total}`;
+      timeSummary.innerHTML = `
+        🕒 Round 1 Time: ${Math.floor(round1Time / 1000)} seconds<br>
+        🕒 Round 2 Time: ${Math.floor(round2Time / 1000)} seconds
+      `;
+
+      let html = "";
+
+      if (errorsRound1.length > 0) {
+        html += `<h3>Round 1 - Listening Errors</h3><table><thead><tr><th>Word</th><th>Your Answer</th><th>Correct</th><th>Meaning</th></tr></thead><tbody>`;
+        errorsRound1.forEach(item => {
+          html += `<tr><td>${item.word}</td><td class="wrong">${item.yourAnswer}</td><td>${item.word}</td><td>${item.meaning}</td></tr>`;
+        });
+        html += `</tbody></table>`;
+      }
+
+      if (errorsRound2.length > 0) {
+        html += `<h3>Round 2 - Meaning Errors</h3><table><thead><tr><th>Word</th><th>Your Answer</th><th>Correct</th><th>Meaning</th></tr></thead><tbody>`;
+        errorsRound2.forEach(item => {
+          html += `<tr><td>${item.word}</td><td class="wrong">${item.yourAnswer}</td><td>${item.word}</td><td>${item.meaning}</td></tr>`;
+        });
+        html += `</tbody></table>`;
+      }
+
+      if (!errorsRound1.length && !errorsRound2.length) {
+        html = "<p>🎉 Perfect! No mistakes!</p>";
+      }
+
+      errorList.innerHTML = html;
+    }
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        if (!nextBtn.classList.contains("hidden")) {
+          handleNext();
+        } else {
+          handleCheck();
+        }
+      }
+    });
+
+    loadWord();
+  </script>
+</body>
+</html>
