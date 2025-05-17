@@ -5,15 +5,37 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>UWON Vocabulary Test</title>
   <style>
-    body {
+    html, body {
       margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+
+    body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: linear-gradient(135deg, #3AC7A4, #2D9C8B);
-      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    .background-fixed {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      z-index: -1;
+      background: linear-gradient(135deg, #3AC7A4, #2D9C8B);
+    }
+
+    .scroll-container {
+      position: relative;
+      height: 100%;
+      overflow-y: auto;
       display: flex;
       justify-content: center;
       align-items: flex-start;
-      padding: 2rem;
+      padding: 2rem 1rem;
+      box-sizing: border-box;
     }
 
     .container {
@@ -81,30 +103,54 @@
       margin-bottom: 1rem;
       color: #444;
     }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 1rem;
+      }
+
+      button, input {
+        font-size: 1rem;
+      }
+
+      table {
+        font-size: 0.9rem;
+      }
+    }
+
+       /* 原有样式 ... */
+
+    .table-container {
+      overflow-x: auto;
+      width: 100%;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1> UWON Vocabulary Test - Lesson 31</h1>
-    <div id="timer">⏱ Time Elapsed: 0 sec</div>
+  <div class="background-fixed"></div>
+  <div class="scroll-container">
+    <div class="container">
+      <h1>UWON Vocabulary Test - Lesson 31</h1>
+      <div id="timer">⏱ Time Elapsed: 0 sec</div>
 
-    <div id="testSection">
-      <p id="instructions">🎧 Round 1: Click "Play" to hear the word</p>
-      <button id="playBtn">🔊 Play Word</button><br />
-      <p id="chineseHint" class="hidden">Meaning: <span></span></p>
-      <input type="text" id="answer" placeholder="Enter your answer" />
-      <button id="checkBtn">✔️ Check</button>
-      <div id="result"></div>
-      <button id="nextBtn" class="hidden">➡️ Next</button>
-      <p id="progress"></p>
-    </div>
+      <div id="testSection">
+        <p id="instructions">🎧 Round 1: Click "Play" to hear the word</p>
+        <button id="playBtn">🔊 Play Word</button><br />
+        <p id="chineseHint" class="hidden">Meaning: <span></span></p>
+        <input type="text" id="answer" placeholder="Enter your answer" />
+        <button id="checkBtn">✔️ Check</button>
+        <div id="result"></div>
+        <button id="nextBtn" class="hidden">➡️ Next</button>
+        <p id="progress"></p>
+      </div>
 
-    <div id="reportSection" class="hidden section">
-      <h2>📊 Test Report</h2>
-      <p id="scoreSummary"></p>
-      <p id="timeSummary"></p>
-      <div id="errorList"></div>
-      <button onclick="location.reload()">🔁 Restart</button>
+      <div id="reportSection" class="hidden section">
+        <h2>📊 Test Report</h2>
+        <p id="scoreSummary"></p>
+        <p id="timeSummary"></p>
+        <div id="errorList"></div>
+        <button onclick="location.reload()">🔁 Restart</button>
+      </div>
     </div>
   </div>
 
@@ -157,6 +203,8 @@
     let currentWord = {};
     const errorsRound1 = [];
     const errorsRound2 = [];
+    let correctRound1 = 0;
+    let correctRound2 = 0;
 
     const playBtn = document.getElementById("playBtn");
     const checkBtn = document.getElementById("checkBtn");
@@ -172,14 +220,12 @@
     const timeSummary = document.getElementById("timeSummary");
     const timerDisplay = document.getElementById("timer");
 
-    let total = wordList.length * 2;
-    let correct = 0;
     let selectedVoice = null;
-
     let startTime = Date.now();
     let round1Start = Date.now();
     let round1Time = 0;
     let round2Time = 0;
+
     let timerInterval = setInterval(() => {
       const elapsed = Date.now() - startTime;
       timerDisplay.textContent = `⏱ Time Elapsed: ${Math.floor(elapsed / 1000)} sec`;
@@ -224,12 +270,7 @@
       if (currentRound === 1) {
         instructions.textContent = "🎧 Round 1: Click \"Play\" to hear the word";
         chineseHint.classList.add("hidden");
-
-        // ✅ 自动播放当前单词
-        if (!selectedVoice) loadVoicesAndSetVoice();
-        setTimeout(() => {
-          speakWord(currentWord.word);
-        }, 200);
+        setTimeout(() => speakWord(currentWord.word), 200);
       } else {
         instructions.textContent = "💡 Round 2: Type the correct English word";
         chineseHint.classList.remove("hidden");
@@ -249,7 +290,8 @@
       if (userAnswer === correctAnswer) {
         resultDiv.textContent = "✅ Correct!";
         resultDiv.className = "correct";
-        correct++;
+        if (currentRound === 1) correctRound1++;
+        else correctRound2++;
       } else {
         resultDiv.textContent = `❌ Incorrect. The correct answer is: ${currentWord.word}`;
         resultDiv.className = "wrong";
@@ -286,7 +328,14 @@
     function showReport() {
       document.getElementById("testSection").classList.add("hidden");
       reportSection.classList.remove("hidden");
-      scoreSummary.textContent = `🎉 Test completed! Correct: ${correct} / ${total}`;
+
+      const totalPerRound = wordList.length;
+      scoreSummary.innerHTML = `
+        ✅ Listening Test (Round 1): ${correctRound1} / ${totalPerRound}<br>
+        ✅ Meaning Test (Round 2): ${correctRound2} / ${totalPerRound}<br>
+        🎯 Total: ${correctRound1 + correctRound2} / ${totalPerRound * 2}
+      `;
+
       timeSummary.innerHTML = `
         🕒 Round 1 Time: ${Math.floor(round1Time / 1000)} seconds<br>
         🕒 Round 2 Time: ${Math.floor(round2Time / 1000)} seconds
@@ -295,12 +344,30 @@
       let html = "";
 
       if (errorsRound1.length > 0) {
-        html += `<h3>Round 1 - Listening Errors</h3><table><thead><tr><th>Word</th><th>Your Answer</th><th>Correct</th><th>Meaning</th></tr></thead><tbody>`;
+        html += `<h3>Round 1 - Listening Errors</h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Word</th>
+                <th>Your Answer</th>
+                <th>Correct</th>
+                <th>Meaning</th>
+              </tr>
+            </thead>
+            <tbody>`;
+        
         errorsRound1.forEach(item => {
-          html += `<tr><td>${item.word}</td><td class="wrong">${item.yourAnswer}</td><td>${item.word}</td><td>${item.meaning}</td></tr>`;
+          html += `<tr>
+            <td>${item.word}</td>
+            <td class="wrong">${item.yourAnswer}</td>
+            <td>${item.word}</td>
+            <td>${item.meaning}</td>
+          </tr>`;
         });
-        html += `</tbody></table>`;
-      }
+
+        html += `</tbody></table></div>`;
+            }
 
       if (errorsRound2.length > 0) {
         html += `<h3>Round 2 - Meaning Errors</h3><table><thead><tr><th>Word</th><th>Your Answer</th><th>Correct</th><th>Meaning</th></tr></thead><tbody>`;
